@@ -1,25 +1,109 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kistenverwaltung</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>Kisteninhalt</h1>
+<body class="bg-gray-100 min-h-screen p-4">
+  <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow">
+    <h1 class="text-2xl font-bold text-center mb-6">📦 Kistenverwaltung</h1>
 
-  <label for="kisteId">Kisten-ID:</label>
-  <input type="text" id="kisteId" />
-  <button onclick="loadKiste()">Anzeigen</button>
+    <div class="mb-6">
+      <label for="kisteId" class="block text-sm font-medium text-gray-700 mb-1">Kisten-ID eingeben oder scannen</label>
+      <input id="kisteId" type="text" placeholder="z. B. K001" class="w-full border rounded p-2" />
+      <button onclick="loadKiste()" class="w-full bg-blue-600 text-white mt-2 py-2 rounded hover:bg-blue-700">Anzeigen</button>
+    </div>
 
-  <h2>Suche nach Gegenstand:</h2>
-  <input type="text" id="searchTerm" placeholder="z. B. Hammer" />
-  <button onclick="searchItem()">Suchen</button>
-  <div id="searchResults"></div>
+    <div class="mb-6">
+      <label for="searchTerm" class="block text-sm font-medium text-gray-700 mb-1">Gegenstand suchen</label>
+      <input type="text" id="searchTerm" placeholder="z. B. Hammer" class="w-full border rounded p-2" />
+      <button onclick="searchItem()" class="w-full bg-green-600 text-white mt-2 py-2 rounded hover:bg-green-700">Suchen</button>
+    </div>
 
-  <hr />
-  <div id="inhalt"></div>
+    <div id="inhalt" class="space-y-4"></div>
+    <div id="searchResults" class="mt-6"></div>
+  </div>
 
-  <script src="script.js"></script>
+  <script>
+    async function loadKiste() {
+      const id = document.getElementById('kisteId').value;
+      const res = await fetch(`/api/kiste/${id}`);
+      const div = document.getElementById('inhalt');
+      div.innerHTML = '';
+      if (!res.ok) {
+        div.innerHTML = '<p class="text-red-500">Kiste nicht gefunden.</p>';
+        return;
+      }
+      const data = await res.json();
+      showInhalt(data);
+    }
+
+    function showInhalt(kiste) {
+      const div = document.getElementById('inhalt');
+      div.innerHTML = `<h2 class="text-lg font-bold">${kiste.bezeichnung} (${kiste.id})</h2>`;
+      kiste.inhalt.forEach((item, i) => {
+        const checked = item.status === 'vorhanden' ? 'checked' : '';
+        div.innerHTML += `
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="item${i}" ${checked} onchange="toggleStatus('${kiste.id}', ${i}, this.checked)" class="h-4 w-4 text-blue-600" />
+            <label for="item${i}" class="text-sm">${item.name}</label>
+          </div>
+        `;
+      });
+    }
+
+    async function toggleStatus(kistenId, index, isChecked) {
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.inhalt[index].status = isChecked ? 'vorhanden' : 'entnommen';
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inhalt: box.inhalt })
+      });
+    }
+
+    async function searchItem() {
+      const term = document.getElementById('searchTerm').value.toLowerCase();
+      const res = await fetch('/api/kisten');
+      const allKisten = await res.json();
+      const output = document.getElementById('searchResults');
+      output.innerHTML = '';
+
+      const results = [];
+      allKisten.forEach(kiste => {
+        kiste.inhalt.forEach(item => {
+          if (item.name.toLowerCase().includes(term)) {
+            results.push({ kiste: kiste.id, name: item.name, status: item.status });
+          }
+        });
+      });
+
+      if (results.length === 0) {
+        output.innerHTML = '<p class="text-gray-500">Keine Treffer gefunden.</p>';
+      } else {
+        output.innerHTML = '<h3 class="text-md font-semibold mb-2">Suchergebnisse:</h3>' +
+          results.map(r => `
+            <p class="text-sm">
+              <strong>${r.name}</strong> in 
+              <a href="?kiste=${r.kiste}" class="text-blue-600 underline">${r.kiste}</a> 
+              (${r.status === 'vorhanden' ? '✅' : '❌'})
+            </p>
+          `).join('');
+      }
+    }
+
+    // Automatisches Laden bei URL-Parameter
+    window.onload = () => {
+      const params = new URLSearchParams(window.location.search);
+      const kiste = params.get('kiste');
+      if (kiste) {
+        document.getElementById('kisteId').value = kiste;
+        loadKiste();
+      }
+    }
+  </script>
 </body>
 </html>
-
