@@ -1,1 +1,21 @@
+{
+  "kisten": [
+    {
+      "id": "K001",
+      "bezeichnung": "Kochutensilien",
+      "inhalt": [
+        { "name": "Topf groß", "status": "vorhanden" },
+        { "name": "Pfanne", "status": "entnommen" }
+      ]
+    },
+    {
+      "id": "K002",
+      "bezeichnung": "Zeltzubehör",
+      "inhalt": [
+        { "name": "Heringe", "status": "vorhanden" },
+        { "name": "Hammer", "status": "vorhanden" }
+      ]
+    }
+  ]
+}
 
