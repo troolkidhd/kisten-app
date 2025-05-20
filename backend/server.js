@@ -45,5 +45,11 @@ app.post('/api/kiste/:id/update', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server läuft auf http://localhost:${PORT}`);
 });
+// Überschreibt die ganze Datei (für Admin-Interface)
+app.post('/api/overwrite', (req, res) => {
+  const newData = req.body;
+  saveData(newData);
+  res.json({ success: true });
+})
 
 
