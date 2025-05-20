@@ -11,6 +11,17 @@
   </style>
 </head>
 <body>
+    <script>
+    if (localStorage.getItem("admin") !== "true") {
+      const pw = prompt("Passwort für Adminbereich:");
+      if (pw !== "lager2024") {
+        alert("Falsches Passwort");
+        window.location.href = "/";
+      } else {
+        localStorage.setItem("admin", "true");
+      }
+    }
+  </script>
   <h1>🔧 Kisten-Admin</h1>
 
   <h2>Neue Kiste erstellen</h2>
