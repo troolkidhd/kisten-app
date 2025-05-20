@@ -1,1 +1,147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kistenverwaltung – Admin</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    input, button, select { margin: 0.5rem 0; width: 100%; padding: 0.5rem; }
+    .kiste-card { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; border-radius: 6px; }
+    label { font-weight: bold; display: block; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Kisten-Admin</h1>
+
+  <h2>Neue Kiste erstellen</h2>
+  <label for="newId">Kisten-ID</label>
+  <input id="newId" placeholder="z. B. K003">
+
+  <label for="newName">Bezeichnung</label>
+  <input id="newName" placeholder="z. B. Erste-Hilfe-Material">
+
+  <button onclick="createKiste()">➕ Kiste hinzufügen</button>
+
+  <h2>Bestehende Kisten</h2>
+  <div id="kistenListe"></div>
+
+  <script>
+    async function loadKisten() {
+      const res = await fetch('/api/kisten');
+      const data = await res.json();
+      const div = document.getElementById('kistenListe');
+      div.innerHTML = '';
+
+      data.forEach(kiste => {
+        const card = document.createElement('div');
+        card.className = 'kiste-card';
+        card.innerHTML = `<strong>${kiste.id}</strong> – ${kiste.bezeichnung}<br><br>`;
+
+        kiste.inhalt.forEach((item, i) => {
+          card.innerHTML += `
+            <input value="${item.name}" onchange="renameItem('${kiste.id}', ${i}, this.value)">
+            <select onchange="changeStatus('${kiste.id}', ${i}, this.value)">
+              <option value="vorhanden" ${item.status === 'vorhanden' ? 'selected' : ''}>✅ vorhanden</option>
+              <option value="entnommen" ${item.status === 'entnommen' ? 'selected' : ''}>❌ entnommen</option>
+            </select>
+            <button onclick="removeItem('${kiste.id}', ${i})">🗑</button><br>
+          `;
+        });
+
+        card.innerHTML += `
+          <input placeholder="Neuer Gegenstand..." id="add_${kiste.id}">
+          <button onclick="addItem('${kiste.id}')">➕ hinzufügen</button>
+        `;
+
+        div.appendChild(card);
+      });
+    }
+
+    async function createKiste() {
+      const id = document.getElementById('newId').value.trim();
+      const name = document.getElementById('newName').value.trim();
+      if (!id || !name) return alert("Bitte beide Felder ausfüllen.");
+
+      const res = await fetch('/api/kisten');
+      const all = await res.json();
+      if (all.some(k => k.id === id)) {
+        return alert("Kisten-ID existiert bereits.");
+      }
+
+      all.push({ id, bezeichnung: name, inhalt: [] });
+      await fetch(`/api/kiste/${id}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inhalt: [] })
+      });
+
+      await fetch('/api/overwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kisten: all })
+      });
+
+      loadKisten();
+    }
+
+    async function addItem(kistenId) {
+      const field = document.getElementById(`add_${kistenId}`);
+      const name = field.value.trim();
+      if (!name) return;
+
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.inhalt.push({ name, status: "vorhanden" });
+
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inhalt: box.inhalt })
+      });
+
+      loadKisten();
+    }
+
+    async function renameItem(kistenId, index, newName) {
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.inhalt[index].name = newName;
+
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inhalt: box.inhalt })
+      });
+    }
+
+    async function changeStatus(kistenId, index, status) {
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.inhalt[index].status = status;
+
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inhalt: box.inhalt })
+      });
+    }
+
+    async function removeItem(kistenId, index) {
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.inhalt.splice(index, 1);
+
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inhalt: box.inhalt })
+      });
+
+      loadKisten();
+    }
+
+    loadKisten();
+  </script>
+</body>
+</html>
 
