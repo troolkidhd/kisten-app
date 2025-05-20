@@ -1,1 +1,25 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Kistenverwaltung</title>
+</head>
+<body>
+  <h1>Kisteninhalt</h1>
+
+  <label for="kisteId">Kisten-ID:</label>
+  <input type="text" id="kisteId" />
+  <button onclick="loadKiste()">Anzeigen</button>
+
+  <h2>Suche nach Gegenstand:</h2>
+  <input type="text" id="searchTerm" placeholder="z. B. Hammer" />
+  <button onclick="searchItem()">Suchen</button>
+  <div id="searchResults"></div>
+
+  <hr />
+  <div id="inhalt"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
 
