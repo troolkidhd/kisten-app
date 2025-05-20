@@ -2,16 +2,12 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Kistenverwaltung – Admin</title>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
-    input, button, select { margin: 0.5rem 0; width: 100%; padding: 0.5rem; }
-    .kiste-card { border: 1px solid #ccc; padding: 1rem; margin-top: 1rem; border-radius: 6px; }
-    label { font-weight: bold; display: block; margin-top: 1rem; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kistenverwaltung Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <script>
+<body class="bg-gray-100 min-h-screen p-4">
+  <script>
     if (localStorage.getItem("admin") !== "true") {
       const pw = prompt("Passwort für Adminbereich:");
       if (pw !== "lager2024") {
@@ -22,19 +18,22 @@
       }
     }
   </script>
-  <h1>🔧 Kisten-Admin</h1>
 
-  <h2>Neue Kiste erstellen</h2>
-  <label for="newId">Kisten-ID</label>
-  <input id="newId" placeholder="z. B. K003">
+  <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6">
+    <h1 class="text-2xl font-bold mb-6 text-center">🔧 Kistenverwaltung Admin</h1>
 
-  <label for="newName">Bezeichnung</label>
-  <input id="newName" placeholder="z. B. Erste-Hilfe-Material">
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Neue Kiste erstellen</h2>
+      <input id="newId" class="border rounded p-2 w-full mb-2" placeholder="Kisten-ID (z. B. K003)" />
+      <input id="newName" class="border rounded p-2 w-full mb-2" placeholder="Bezeichnung (z. B. Erste-Hilfe)" />
+      <button onclick="createKiste()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Kiste hinzufügen</button>
+    </div>
 
-  <button onclick="createKiste()">➕ Kiste hinzufügen</button>
-
-  <h2>Bestehende Kisten</h2>
-  <div id="kistenListe"></div>
+    <div>
+      <h2 class="text-xl font-semibold mb-4">Bestehende Kisten</h2>
+      <div id="kistenListe" class="space-y-4"></div>
+    </div>
+  </div>
 
   <script>
     async function loadKisten() {
@@ -45,23 +44,27 @@
 
       data.forEach(kiste => {
         const card = document.createElement('div');
-        card.className = 'kiste-card';
-        card.innerHTML = `<strong>${kiste.id}</strong> – ${kiste.bezeichnung}<br><br>`;
+        card.className = 'border p-4 rounded shadow bg-gray-50';
+        card.innerHTML = `<h3 class="font-bold text-lg mb-2">${kiste.id} – ${kiste.bezeichnung}</h3>`;
 
         kiste.inhalt.forEach((item, i) => {
           card.innerHTML += `
-            <input value="${item.name}" onchange="renameItem('${kiste.id}', ${i}, this.value)">
-            <select onchange="changeStatus('${kiste.id}', ${i}, this.value)">
-              <option value="vorhanden" ${item.status === 'vorhanden' ? 'selected' : ''}>✅ vorhanden</option>
-              <option value="entnommen" ${item.status === 'entnommen' ? 'selected' : ''}>❌ entnommen</option>
-            </select>
-            <button onclick="removeItem('${kiste.id}', ${i})">🗑</button><br>
+            <div class="flex items-center gap-2 mb-2">
+              <input class="border p-1 flex-grow rounded" value="${item.name}" onchange="renameItem('${kiste.id}', ${i}, this.value)" />
+              <select class="border rounded p-1" onchange="changeStatus('${kiste.id}', ${i}, this.value)">
+                <option value="vorhanden" ${item.status === 'vorhanden' ? 'selected' : ''}>✅</option>
+                <option value="entnommen" ${item.status === 'entnommen' ? 'selected' : ''}>❌</option>
+              </select>
+              <button onclick="removeItem('${kiste.id}', ${i})" class="text-red-500">🗑</button>
+            </div>
           `;
         });
 
         card.innerHTML += `
-          <input placeholder="Neuer Gegenstand..." id="add_${kiste.id}">
-          <button onclick="addItem('${kiste.id}')">➕ hinzufügen</button>
+          <div class="flex items-center gap-2 mt-2">
+            <input placeholder="Neuer Gegenstand..." id="add_${kiste.id}" class="border p-2 flex-grow rounded" />
+            <button onclick="addItem('${kiste.id}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">+</button>
+          </div>
         `;
 
         div.appendChild(card);
@@ -75,9 +78,7 @@
 
       const res = await fetch('/api/kisten');
       const all = await res.json();
-      if (all.some(k => k.id === id)) {
-        return alert("Kisten-ID existiert bereits.");
-      }
+      if (all.some(k => k.id === id)) return alert("Kisten-ID existiert bereits.");
 
       all.push({ id, bezeichnung: name, inhalt: [] });
       await fetch(`/api/kiste/${id}/update`, {
@@ -155,4 +156,3 @@
   </script>
 </body>
 </html>
-
