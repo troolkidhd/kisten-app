@@ -1,1 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material-Übersicht</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold">📊 Übersicht: Entnommene Gegenstände</h1>
+      <a href="/index.html" class="text-sm text-blue-600 hover:underline">🔙 Zurück</a>
+    </div>
+
+    <div id="overviewList" class="space-y-4">
+      <p class="text-gray-600">Lade Daten...</p>
+    </div>
+
+    <div class="pt-6 border-t">
+      <h2 class="text-xl font-semibold mb-2">(Geplante) Statistik</h2>
+      <ul class="list-disc list-inside text-gray-700">
+        <li>Meist entnommene Gegenstände</li>
+        <li>Letzte Änderungen (Chronik)</li>
+        <li>Kisten mit häufigem Fehlbestand</li>
+        <li>Verbrauchstrends über die Zeit</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    async function ladeUebersicht() {
+      const res = await fetch('/api/kisten');
+      const kisten = await res.json();
+      const container = document.getElementById('overviewList');
+      container.innerHTML = '';
+
+      const entnommeneKisten = kisten.map(kiste => {
+        const entnommen = kiste.inhalt.filter(item => item.status === 'entnommen');
+        return entnommen.length > 0 ? { ...kiste, entnommen } : null;
+      }).filter(Boolean);
+
+      if (entnommeneKisten.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Aktuell ist kein Material als entnommen markiert.</p>';
+        return;
+      }
+
+      entnommeneKisten.forEach(kiste => {
+        const block = document.createElement('div');
+        block.className = 'border border-gray-200 rounded p-4 bg-gray-50';
+        block.innerHTML = `<h3 class="font-semibold text-lg mb-2">📦 ${kiste.id} – ${kiste.bezeichnung}</h3>`;
+        kiste.entnommen.forEach(item => {
+          block.innerHTML += `<p class="text-red-600">❌ ${item.name}</p>`;
+        });
+        container.appendChild(block);
+      });
+    }
+
+    ladeUebersicht();
+  </script>
+</body>
+</html>
 
