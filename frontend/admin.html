@@ -20,13 +20,17 @@
   </script>
 
   <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6">
-    <h1 class="text-2xl font-bold mb-6 text-center">🔧 Kistenverwaltung Admin</h1>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">🔧 Kistenverwaltung Admin</h1>
+      <a href="/index.html" class="text-sm text-blue-600 hover:underline">🏠 Zur Startseite</a>
+    </div>
 
     <div class="mb-8">
       <h2 class="text-xl font-semibold mb-2">Neue Kiste erstellen</h2>
       <input id="newId" class="border rounded p-2 w-full mb-2" placeholder="Kisten-ID (z. B. K003)" />
       <input id="newName" class="border rounded p-2 w-full mb-2" placeholder="Bezeichnung (z. B. Erste-Hilfe)" />
       <button onclick="createKiste()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Kiste hinzufügen</button>
+      <div id="createMsg" class="text-green-600 text-sm mt-2 hidden">✅ Kiste erstellt</div>
     </div>
 
     <div>
@@ -72,8 +76,11 @@
     }
 
     async function createKiste() {
-      const id = document.getElementById('newId').value.trim();
-      const name = document.getElementById('newName').value.trim();
+      const idInput = document.getElementById('newId');
+      const nameInput = document.getElementById('newName');
+      const id = idInput.value.trim();
+      const name = nameInput.value.trim();
+      const msg = document.getElementById('createMsg');
       if (!id || !name) return alert("Bitte beide Felder ausfüllen.");
 
       const res = await fetch('/api/kisten');
@@ -92,6 +99,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kisten: all })
       });
+
+      idInput.value = '';
+      nameInput.value = '';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2000);
 
       loadKisten();
     }
