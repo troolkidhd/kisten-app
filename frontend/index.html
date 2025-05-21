@@ -9,7 +9,7 @@
 <body class="bg-gray-100 min-h-screen p-4">
   <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow relative">
     <!-- Admin Button -->
-    <div class="absolute top-4 right-4">
+    <div class="absolute top-16 right-4">
       <script>
         if (localStorage.getItem("admin") === "true") {
           document.write('<a href="/admin.html" class="text-sm text-blue-600 hover:underline">⚙️ Admin</a>');
@@ -18,7 +18,7 @@
     </div>
 
     <!-- Zurück-Button -->
-    <div id="backButton" class="absolute top-4 left-4 hidden">
+    <div id="backButton" class="absolute top-16 left-4 hidden">
       <button onclick="goBack()" class="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">🔙 Zurück</button>
     </div>
 
