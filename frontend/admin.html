@@ -49,7 +49,11 @@
       data.forEach(kiste => {
         const card = document.createElement('div');
         card.className = 'border p-4 rounded shadow bg-gray-50';
-        card.innerHTML = `<h3 class="font-bold text-lg mb-2">${kiste.id} – ${kiste.bezeichnung}</h3>`;
+        card.innerHTML = `
+          <h3 class="font-bold text-lg mb-2">
+            <input class="border p-1 rounded" value="${kiste.bezeichnung}" onchange="renameKiste('${kiste.id}', this.value)" />
+            – ${kiste.id}
+          </h3>`;
 
         kiste.inhalt.forEach((item, i) => {
           card.innerHTML += `
@@ -69,6 +73,11 @@
             <input placeholder="Neuer Gegenstand..." id="add_${kiste.id}" class="border p-2 flex-grow rounded" />
             <button onclick="addItem('${kiste.id}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">+</button>
           </div>
+        `;
+
+        // Hinzufügen eines "Löschen"-Buttons für die ganze Kiste
+        card.innerHTML += `
+          <button onclick="deleteKiste('${kiste.id}')" class="mt-2 text-red-500">🗑 Kiste löschen</button>
         `;
 
         div.appendChild(card);
@@ -138,6 +147,18 @@
       });
     }
 
+    async function renameKiste(kistenId, newBezeichnung) {
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.bezeichnung = newBezeichnung;
+
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bezeichnung: newBezeichnung, inhalt: box.inhalt })
+      });
+    }
+
     async function changeStatus(kistenId, index, status) {
       const res = await fetch(`/api/kiste/${kistenId}`);
       const box = await res.json();
@@ -159,6 +180,20 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inhalt: box.inhalt })
+      });
+
+      loadKisten();
+    }
+
+    async function deleteKiste(kistenId) {
+      const res = await fetch('/api/kisten');
+      const all = await res.json();
+      const updatedKisten = all.filter(kiste => kiste.id !== kistenId);
+
+      await fetch('/api/overwrite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kisten: updatedKisten })
       });
 
       loadKisten();
