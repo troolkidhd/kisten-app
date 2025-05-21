@@ -7,16 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
-  <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow">
+  <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow relative">
+    <!-- Admin Button -->
+    <div class="absolute top-4 right-4">
+      <script>
+        if (localStorage.getItem("admin") === "true") {
+          document.write('<a href="/admin.html" class="text-sm text-blue-600 hover:underline">⚙️ Admin</a>');
+        }
+      </script>
+    </div>
+
     <h1 class="text-2xl font-bold text-center mb-6">📦 Kistenverwaltung</h1>
 
-    <div class="mb-6">
+    <div id="kistenForm" data-role="kisten-form" class="mb-6">
       <label for="kisteId" class="block text-sm font-medium text-gray-700 mb-1">Kisten-ID eingeben oder scannen</label>
-      <input id="kisteId" type="text" placeholder="z. B. K001" class="w-full border rounded p-2" />
+      <input id="kisteId" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="z. B. 001" class="w-full border rounded p-2" />
       <button onclick="loadKiste()" class="w-full bg-blue-600 text-white mt-2 py-2 rounded hover:bg-blue-700">Anzeigen</button>
     </div>
 
-    <div class="mb-6">
+    <div id="searchArea" data-role="search" class="mb-6">
       <label for="searchTerm" class="block text-sm font-medium text-gray-700 mb-1">Gegenstand suchen</label>
       <input type="text" id="searchTerm" placeholder="z. B. Hammer" class="w-full border rounded p-2" />
       <button onclick="searchItem()" class="w-full bg-green-600 text-white mt-2 py-2 rounded hover:bg-green-700">Suchen</button>
@@ -29,7 +38,8 @@
   <script>
     async function loadKiste() {
       const id = document.getElementById('kisteId').value;
-      const res = await fetch(`/api/kiste/${id}`);
+      const kistenId = id.startsWith("K") ? id : "K" + id;
+      const res = await fetch(`/api/kiste/${kistenId}`);
       const div = document.getElementById('inhalt');
       div.innerHTML = '';
       if (!res.ok) {
@@ -37,6 +47,8 @@
         return;
       }
       const data = await res.json();
+      document.getElementById("kistenForm").style.display = 'none';
+      document.getElementById("searchArea").style.display = 'none';
       showInhalt(data);
     }
 
@@ -100,7 +112,7 @@
       const params = new URLSearchParams(window.location.search);
       const kiste = params.get('kiste');
       if (kiste) {
-        document.getElementById('kisteId').value = kiste;
+        document.getElementById('kisteId').value = kiste.replace("K", "");
         loadKiste();
       }
     }
