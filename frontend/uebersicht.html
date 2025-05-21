@@ -4,33 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Material-Übersicht</title>
-  <script src="https://cdn.tailwindcss.com">
-    async function ladeStatistik() {
-      const res = await fetch('/api/kisten');
-      const kisten = await res.json();
-      const statistikDiv = document.getElementById('statistikContent');
-
-      const zaehler = {};
-      kisten.forEach(kiste => {
-        kiste.inhalt.forEach(item => {
-          if (item.status === 'entnommen') {
-            zaehler[item.name] = (zaehler[item.name] || 0) + 1;
-          }
-        });
-      });
-
-      const top = Object.entries(zaehler)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-      if (top.length === 0) {
-        statistikDiv.innerHTML = '<p class="text-gray-500">Keine Daten zur Anzeige.</p>';
-        return;
-      }
-
-      statistikDiv.innerHTML = '<ul class="list-disc list-inside">' +
-        top.map(([name, count]) => `<li>${name} – ${count}× entnommen</li>`).join('') + '</ul>';
-    }
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
   <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
@@ -76,6 +50,33 @@
         });
         container.appendChild(block);
       });
+    }
+
+    async function ladeStatistik() {
+      const res = await fetch('/api/kisten');
+      const kisten = await res.json();
+      const statistikDiv = document.getElementById('statistikContent');
+
+      const zaehler = {};
+      kisten.forEach(kiste => {
+        kiste.inhalt.forEach(item => {
+          if (item.status === 'entnommen') {
+            zaehler[item.name] = (zaehler[item.name] || 0) + 1;
+          }
+        });
+      });
+
+      const top = Object.entries(zaehler)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      if (top.length === 0) {
+        statistikDiv.innerHTML = '<p class="text-gray-500">Keine Daten zur Anzeige.</p>';
+        return;
+      }
+
+      statistikDiv.innerHTML = '<ul class="list-disc list-inside">' +
+        top.map(([name, count]) => `<li>${name} – ${count}× entnommen</li>`).join('') + '</ul>';
     }
 
     ladeUebersicht();
