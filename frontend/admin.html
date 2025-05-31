@@ -33,6 +33,7 @@
       <h2 class="text-xl font-semibold mb-2">Neue Kiste erstellen</h2>
       <input id="newId" class="border rounded p-2 w-full mb-2" placeholder="Kisten-ID (z. B. K003)" />
       <input id="newName" class="border rounded p-2 w-full mb-2" placeholder="Bezeichnung (z. B. Erste-Hilfe)" />
+      <input id="newLager" class="border rounded p-2 w-full mb-2" placeholder="Lagerplatz (z. B. A1)" />
       <button onclick="createKiste()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Kiste hinzufügen</button>
       <div id="createMsg" class="text-green-600 text-sm mt-2 hidden">✅ Kiste erstellt</div>
     </div>
@@ -53,11 +54,13 @@
       data.forEach(kiste => {
         const card = document.createElement('div');
         card.className = 'border p-4 rounded shadow bg-gray-50';
-        card.innerHTML = `
+       card.innerHTML = `
           <h3 class="font-bold text-lg mb-2">
             <input class="border p-1 rounded" value="${kiste.bezeichnung}" onchange="renameKiste('${kiste.id}', this.value)" />
             – ${kiste.id}
+            <span class="ml-2">Lp: <input class="border p-1 rounded w-16" value="${kiste.lagerplatz || ''}" onchange="changeLagerplatz('${kiste.id}', this.value)" /></span>
           </h3>`;
+
 
         kiste.inhalt.forEach((item, i) => {
           card.innerHTML += `
@@ -93,6 +96,7 @@
       const nameInput = document.getElementById('newName');
       const id = idInput.value.trim();
       const name = nameInput.value.trim();
+      const lagerplatz = document.getElementById('newLager').value.trim();
       const msg = document.getElementById('createMsg');
       if (!id || !name) return alert("Bitte beide Felder ausfüllen.");
 
@@ -100,11 +104,11 @@
       const all = await res.json();
       if (all.some(k => k.id === id)) return alert("Kisten-ID existiert bereits.");
 
-      all.push({ id, bezeichnung: name, inhalt: [] });
+      all.push({ id, bezeichnung: name, lagerplatz, inhalt: [] });
       await fetch(`/api/kiste/${id}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inhalt: [] })
+        body: JSON.stringify({ bezeichnung: name, lagerplatz, inhalt: [] })
       });
 
       await fetch('/api/overwrite', {
@@ -115,6 +119,7 @@
 
       idInput.value = '';
       nameInput.value = '';
+      document.getElementById('newLager').value = '';
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 2000);
 
@@ -202,6 +207,23 @@
 
       loadKisten();
     }
+    
+    async function changeLagerplatz(kistenId, neuerLagerplatz) {
+      const res = await fetch(`/api/kiste/${kistenId}`);
+      const box = await res.json();
+      box.lagerplatz = neuerLagerplatz;
+    
+      await fetch(`/api/kiste/${kistenId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bezeichnung: box.bezeichnung,
+          lagerplatz: neuerLagerplatz,
+          inhalt: box.inhalt
+        })
+      });
+    }
+
 
     loadKisten();
   </script>
