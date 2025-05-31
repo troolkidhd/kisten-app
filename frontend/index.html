@@ -84,39 +84,45 @@
       });
     }
 
-    async function searchItem() {
-        const results = [];
+  async function searchItem() {
+      const term = document.getElementById('searchTerm').value.toLowerCase();
+      const res = await fetch('/api/kisten');
+      const allKisten = await res.json();
+      const output = document.getElementById('searchResults');
+      output.innerHTML = '';
+    
+      const results = [];
+    
       allKisten.forEach(kiste => {
+        const lp = kiste.lagerplatz || ''; // Fallback falls nicht vorhanden
         kiste.inhalt.forEach(item => {
           if (item.name.toLowerCase().includes(term)) {
             results.push({
               kiste: kiste.id,
               name: item.name,
               status: item.status,
-              lagerplatz: kiste.lagerplatz || ''
+              lagerplatz: lp
             });
-
           }
         });
       });
-      
+    
       if (results.length === 0) {
         output.innerHTML = '<p class="text-gray-500">Keine Treffer gefunden.</p>';
-      } else {
-        output.innerHTML = '<h3 class="text-md font-semibold mb-2">Suchergebnisse:</h3>' +
-          results.map(r => `
-            <p class="text-sm">
-              ${r.status === 'vorhanden' ? '✅' : '❌'} 
-                <strong>${r.name}</strong> in 
-                <a href="?kiste=${r.kiste}" class="text-blue-600 underline">${r.kiste}</a>
-                ${r.lagerplatz ? ` – Lp: ${r.lagerplatz}` : ''}
-              <strong>${r.name}</strong> in 
-              <a href="?kiste=${r.kiste}" class="text-blue-600 underline">${r.kiste}</a> 
-              ${r.lagerplatz ? `– Lp: ${r.lagerplatz}` : ''}
-            </p>
-          `).join('');
+        return;
       }
+    
+      output.innerHTML = '<h3 class="text-md font-semibold mb-2">Suchergebnisse:</h3>' +
+        results.map(r => `
+          <p class="text-sm">
+            ${r.status === 'vorhanden' ? '✅' : '❌'} 
+            <strong>${r.name}</strong> in 
+            <a href="?kiste=${r.kiste}" class="text-blue-600 underline">${r.kiste}</a>
+            ${r.lagerplatz ? ` – Lp: ${r.lagerplatz}` : ''}
+          </p>
+        `).join('');
     }
+
 
     function goBack() {
       document.getElementById("kistenForm").style.display = '';
