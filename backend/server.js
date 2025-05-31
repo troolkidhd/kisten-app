@@ -36,7 +36,14 @@ app.get('/api/kiste/:id', async (req, res) => {
 app.post('/api/kiste/:id/update', async (req, res) => {
   await kistenCollection.updateOne(
     { id: req.params.id },
-    { $set: { inhalt: req.body.inhalt } }
+    {
+      $set: {
+        inhalt: req.body.inhalt,
+        bezeichnung: req.body.bezeichnung,
+        lagerplatz: req.body.lagerplatz
+      }
+    }
+
   );
   res.json({ success: true });
 });
