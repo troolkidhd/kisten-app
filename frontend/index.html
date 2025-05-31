@@ -91,11 +91,11 @@
           if (item.name.toLowerCase().includes(term)) {
             results.push({
               kiste: kiste.id,
-              bezeichnung: kiste.bezeichnung,
               name: item.name,
               status: item.status,
               lagerplatz: kiste.lagerplatz || ''
             });
+
           }
         });
       });
@@ -107,6 +107,9 @@
           results.map(r => `
             <p class="text-sm">
               ${r.status === 'vorhanden' ? '✅' : '❌'} 
+                <strong>${r.name}</strong> in 
+                <a href="?kiste=${r.kiste}" class="text-blue-600 underline">${r.kiste}</a>
+                ${r.lagerplatz ? ` – Lp: ${r.lagerplatz}` : ''}
               <strong>${r.name}</strong> in 
               <a href="?kiste=${r.kiste}" class="text-blue-600 underline">${r.kiste}</a> 
               ${r.lagerplatz ? `– Lp: ${r.lagerplatz}` : ''}
