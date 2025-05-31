@@ -160,13 +160,18 @@
       const res = await fetch(`/api/kiste/${kistenId}`);
       const box = await res.json();
       box.bezeichnung = newBezeichnung;
-
+    
       await fetch(`/api/kiste/${kistenId}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bezeichnung: newBezeichnung, inhalt: box.inhalt })
+        body: JSON.stringify({
+          bezeichnung: newBezeichnung,
+          lagerplatz: box.lagerplatz || '',
+          inhalt: box.inhalt
+        })
       });
     }
+
 
     async function changeStatus(kistenId, index, status) {
       const res = await fetch(`/api/kiste/${kistenId}`);
