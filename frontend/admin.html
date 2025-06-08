@@ -157,8 +157,13 @@
       await fetch(`/api/kiste/${kistenId}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inhalt: box.inhalt })
+        body: JSON.stringify({
+          bezeichnung: box.bezeichnung,
+          lagerplatz: box.lagerplatz,
+          inhalt: box.inhalt
+        })
       });
+
     }
 
     async function renameKiste(kistenId, newBezeichnung) {
@@ -196,10 +201,15 @@
       box.inhalt.splice(index, 1);
 
       await fetch(`/api/kiste/${kistenId}/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inhalt: box.inhalt })
-      });
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bezeichnung: box.bezeichnung,
+            lagerplatz: box.lagerplatz,
+            inhalt: box.inhalt
+          })
+        });
+
 
       loadKisten();
     }
