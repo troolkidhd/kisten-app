@@ -60,18 +60,38 @@
     }
 
     function showInhalt(kiste) {
-      const div = document.getElementById('inhalt');
-      div.innerHTML = `<h2 class="text-lg font-bold">${kiste.bezeichnung} (${kiste.id})${kiste.lagerplatz ? ' – Lp: ' + kiste.lagerplatz : ''}</h2>`;
-      kiste.inhalt.forEach((item, i) => {
-        const checked = item.status === 'vorhanden' ? 'checked' : '';
-        div.innerHTML += `
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="item${i}" ${checked} onchange="toggleStatus('${kiste.id}', ${i}, this.checked)" class="h-4 w-4 text-blue-600" />
-            <label for="item${i}" class="text-sm">${item.name}</label>
-          </div>
-        `;
-      });
-    }
+        const div = document.getElementById('inhalt');
+        div.innerHTML = `<h2 class="text-lg font-bold">${kiste.bezeichnung} (${kiste.id}) ${kiste.lagerplatz ? '– Lp: ' + kiste.lagerplatz : ''}</h2>`;
+      
+        kiste.inhalt.forEach((item, i) => {
+          const modus = item.modus || "einzeln";
+      
+          if (modus === "einzeln") {
+            const checked = item.status === 'vorhanden' ? 'checked' : '';
+            div.innerHTML += `
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="item${i}" ${checked} onchange="toggleStatus('${kiste.id}', ${i}, this.checked)" class="h-4 w-4 text-blue-600" />
+                <label for="item${i}" class="text-sm">${item.name}</label>
+              </div>
+            `;
+          } else {
+            const verfuegbar = item.verfuegbar ?? 0;
+            const anzahl = item.anzahl ?? 0;
+            let color = 'text-gray-600';
+            if (verfuegbar === 0) color = 'text-red-600';
+            else if (verfuegbar < anzahl) color = 'text-yellow-600';
+            else color = 'text-green-600';
+      
+            div.innerHTML += `
+              <div class="flex flex-col mb-2">
+                <span class="text-sm font-medium">${item.name}</span>
+                <span class="text-sm ${color}">Verfügbar: ${verfuegbar} / ${anzahl}</span>
+              </div>
+            `;
+          }
+        });
+      }
+
 
     async function toggleStatus(kistenId, index, isChecked) {
       const res = await fetch(`/api/kiste/${kistenId}`);
