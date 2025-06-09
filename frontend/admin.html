@@ -45,6 +45,93 @@
   </div>
 
   <script>
+
+    function renderItemUI(kiste, item, index) {
+        const modus = item.modus || "einzeln"; // fallback für alte Einträge
+      
+        if (modus === "einzeln") {
+          return `
+            <div class="flex items-center gap-2 mb-2">
+              <input class="border p-1 flex-grow rounded" value="${item.name}" onchange="renameItem('${kiste.id}', ${index}, this.value)" />
+              <select class="border rounded p-1" onchange="changeStatus('${kiste.id}', ${index}, this.value)">
+                <option value="vorhanden" ${item.status === 'vorhanden' ? 'selected' : ''}>✅</option>
+                <option value="entnommen" ${item.status === 'entnommen' ? 'selected' : ''}>❌</option>
+              </select>
+              <button onclick="toggleModus('${kiste.id}', ${index})" class="text-sm">↔</button>
+              <button onclick="removeItem('${kiste.id}', ${index})" class="text-red-500">🗑</button>
+            </div>
+          `;
+        } else {
+          const verfuegbar = item.verfuegbar ?? item.anzahl ?? 0;
+          const anzahl = item.anzahl ?? verfuegbar;
+      
+          return `
+            <div class="flex items-center gap-2 mb-2">
+              <input class="border p-1 flex-grow rounded" value="${item.name}" onchange="renameItem('${kiste.id}', ${index}, this.value)" />
+              <button onclick="adjustCount('${kiste.id}', ${index}, -1)" class="px-2 bg-gray-200 rounded">–</button>
+              <span>${verfuegbar} / ${anzahl}</span>
+              <button onclick="adjustCount('${kiste.id}', ${index}, 1)" class="px-2 bg-gray-200 rounded">+</button>
+              <button onclick="toggleModus('${kiste.id}', ${index})" class="text-sm">↔</button>
+              <button onclick="removeItem('${kiste.id}', ${index})" class="text-red-500">🗑</button>
+            </div>
+          `;
+        }
+      }
+
+      async function toggleModus(kistenId, index) {
+  const res = await fetch(`/api/kiste/${kistenId}`);
+  const box = await res.json();
+  const item = box.inhalt[index];
+
+  if (item.modus === "anzahl") {
+    item.modus = "einzeln";
+    item.status = item.verfuegbar > 0 ? "vorhanden" : "entnommen";
+    delete item.verfuegbar;
+    delete item.anzahl;
+  } else {
+    item.modus = "anzahl";
+    item.anzahl = 1;
+    item.verfuegbar = 1;
+    delete item.status;
+  }
+
+  await fetch(`/api/kiste/${kistenId}/update`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      bezeichnung: box.bezeichnung,
+      lagerplatz: box.lagerplatz,
+      inhalt: box.inhalt
+    })
+  });
+
+  loadKisten();
+}
+
+async function adjustCount(kistenId, index, delta) {
+  const res = await fetch(`/api/kiste/${kistenId}`);
+  const box = await res.json();
+  const item = box.inhalt[index];
+
+  item.anzahl = item.anzahl ?? item.verfuegbar ?? 0;
+  item.verfuegbar = item.verfuegbar ?? item.anzahl;
+
+  item.verfuegbar = Math.max(0, Math.min(item.anzahl, item.verfuegbar + delta));
+
+  await fetch(`/api/kiste/${kistenId}/update`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      bezeichnung: box.bezeichnung,
+      lagerplatz: box.lagerplatz,
+      inhalt: box.inhalt
+    })
+  });
+
+  loadKisten();
+}
+
+    
     async function loadKisten() {
       const res = await fetch('/api/kisten');
       const data = await res.json();
@@ -62,18 +149,10 @@
           </h3>`;
 
 
-        kiste.inhalt.forEach((item, i) => {
-          card.innerHTML += `
-            <div class="flex items-center gap-2 mb-2">
-              <input class="border p-1 flex-grow rounded" value="${item.name}" onchange="renameItem('${kiste.id}', ${i}, this.value)" />
-              <select class="border rounded p-1" onchange="changeStatus('${kiste.id}', ${i}, this.value)">
-                <option value="vorhanden" ${item.status === 'vorhanden' ? 'selected' : ''}>✅</option>
-                <option value="entnommen" ${item.status === 'entnommen' ? 'selected' : ''}>❌</option>
-              </select>
-              <button onclick="removeItem('${kiste.id}', ${i})" class="text-red-500">🗑</button>
-            </div>
-          `;
-        });
+      kiste.inhalt.forEach((item, i) => {
+        card.innerHTML += renderItemUI(kiste, item, i);
+      });
+
 
         card.innerHTML += `
           <div class="flex items-center gap-2 mt-2">
