@@ -69,7 +69,10 @@
             <div class="flex items-center gap-2 mb-2">
               <input class="border p-1 flex-grow rounded" value="${item.name}" onchange="renameItem('${kiste.id}', ${index}, this.value)" />
               <button onclick="adjustCount('${kiste.id}', ${index}, -1)" class="px-2 bg-gray-200 rounded">–</button>
-              <span>${verfuegbar} / ${anzahl}</span>
+              <span>${verfuegbar} /</span>
+              <input type="number" value="${anzahl}" min="1" class="w-16 border rounded p-1 text-center"
+                onchange="updateGesamtanzahl('${kiste.id}', ${index}, this.value)" />
+
               <button onclick="adjustCount('${kiste.id}', ${index}, 1)" class="px-2 bg-gray-200 rounded">+</button>
               <button onclick="toggleModus('${kiste.id}', ${index})" class="text-sm">↔</button>
               <button onclick="removeItem('${kiste.id}', ${index})" class="text-red-500">🗑</button>
@@ -130,6 +133,31 @@ async function adjustCount(kistenId, index, delta) {
 
   loadKisten();
 }
+
+      async function updateGesamtanzahl(kistenId, index, neueAnzahl) {
+        const res = await fetch(`/api/kiste/${kistenId}`);
+        const box = await res.json();
+        const item = box.inhalt[index];
+      
+        const neue = parseInt(neueAnzahl);
+        if (isNaN(neue) || neue < 1) return alert("Ungültige Anzahl");
+      
+        item.anzahl = neue;
+        item.verfuegbar = Math.min(item.verfuegbar ?? neue, neue); // Falls mehr entnommen als neu erlaubt
+      
+        await fetch(`/api/kiste/${kistenId}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bezeichnung: box.bezeichnung,
+            lagerplatz: box.lagerplatz,
+            inhalt: box.inhalt
+          })
+        });
+      
+        loadKisten();
+      }
+
 
     
     async function loadKisten() {
