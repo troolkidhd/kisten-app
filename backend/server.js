@@ -21,11 +21,66 @@ async function connectDB() {
 
 // Alle Kisten abrufen
 app.get('/api/kisten', async (req, res) => {
+  diff --git a/backend/server.js b/backend/server.js
+index 9bd63ec2695d3d7594c8889e27c7f4b35741c321..501ecc23ec256f0b8f55b6d21f9b6cece68ee295 100644
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -1,49 +1,53 @@
+ // Neues MongoDB-basiertes Backend
+ const express = require('express');
+ const { MongoClient, ObjectId } = require('mongodb');
+ const cors = require('cors');
+ const app = express();
+ const PORT = process.env.PORT || 3000;
+ 
+ const uri = 'mongodb+srv://appuser:lager2024@zeltlager.ircd8dl.mongodb.net/?retryWrites=true&w=majority&appName=Zeltlager';
+ const client = new MongoClient(uri);
+ let kistenCollection;
+ 
+ app.use(cors());
+ app.use(express.json());
+ app.use(express.static('frontend'));
+ 
+ async function connectDB() {
+   await client.connect();
+   const db = client.db('kistenDB');
+   kistenCollection = db.collection('kisten');
+ }
+ 
+ // Alle Kisten abrufen
+ app.get('/api/kisten', async (req, res) => {
+
   const kisten = await kistenCollection
     .find({})
     .collation({ locale: 'de', numericOrdering: true })
     .sort({ id: 1 })
     .toArray();
+   res.json(kisten);
+ });
+ 
+ // Einzelne Kiste abrufen
+ app.get('/api/kiste/:id', async (req, res) => {
+   const box = await kistenCollection.findOne({ id: req.params.id });
+   if (!box) return res.status(404).json({ error: 'Kiste nicht gefunden' });
+   res.json(box);
+ });
+ 
+ // Einzelne Kiste aktualisieren
+ app.post('/api/kiste/:id/update', async (req, res) => {
+   await kistenCollection.updateOne(
+     { id: req.params.id },
+     {
+       $set: {
+         inhalt: req.body.inhalt,
+         bezeichnung: req.body.bezeichnung,
+         lagerplatz: req.body.lagerplatz
+       }
+     }
+ 
+   );
+   res.json({ success: true });
+ });
+
   res.json(kisten);
 });
 
