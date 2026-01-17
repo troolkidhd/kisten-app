@@ -21,7 +21,11 @@ async function connectDB() {
 
 // Alle Kisten abrufen
 app.get('/api/kisten', async (req, res) => {
-  const kisten = await kistenCollection.find({}).toArray();
+  const kisten = await kistenCollection
+    .find({})
+    .collation({ locale: 'de', numericOrdering: true })
+    .sort({ id: 1 })
+    .toArray();
   res.json(kisten);
 });
 
